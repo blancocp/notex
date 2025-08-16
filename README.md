@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NoteX - Sistema de Gestión de Notas
 
-## Getting Started
+Un sistema completo para registrar, organizar y gestionar notas, comandos y procedimientos con categorización por tags y enlaces asociados.
 
-First, run the development server:
+## Características
+
+- ✅ Registro de notas con título, descripción y contenido
+- ✅ Sistema de categorías para organización
+- ✅ Tags para clasificación flexible
+- ✅ URLs asociadas a las notas
+- ✅ CRUD completo (Crear, Leer, Actualizar, Eliminar)
+- ✅ Búsqueda y filtrado por categoría/tag
+- ✅ Autenticación de usuarios
+- ✅ Interfaz responsive
+
+## Stack Tecnológico
+
+- **Frontend**: Next.js 15 con TypeScript
+- **Backend**: Supabase (PostgreSQL)
+- **Estilos**: Tailwind CSS
+- **Autenticación**: Supabase Auth
+- **Deployment**: Vercel (recomendado)
+
+## Configuración del Proyecto
+
+### 1. Instalar dependencias
+
+```bash
+npm install
+```
+
+### 2. Configurar Supabase
+
+1. Crear un proyecto en [Supabase](https://supabase.com)
+2. Copiar las credenciales del proyecto
+3. Completar las variables de entorno en `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anonima
+SUPABASE_SERVICE_ROLE_KEY=tu_clave_de_servicio
+```
+
+### 3. Configurar la base de datos
+
+Ejecutar las migraciones SQL en Supabase para crear las tablas necesarias.
+
+### 4. Ejecutar el proyecto
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+El proyecto estará disponible en `http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Estructura del Proyecto
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/                 # App Router de Next.js
+├── components/          # Componentes reutilizables
+├── lib/                # Configuraciones y utilidades
+├── types/              # Definiciones de tipos TypeScript
+└── hooks/              # Custom hooks
+```
 
-## Learn More
+## Esquema de Base de Datos
 
-To learn more about Next.js, take a look at the following resources:
+### Tablas principales:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **notes**: Almacena las notas principales
+- **categories**: Categorías para organizar notas
+- **tags**: Tags para clasificación flexible
+- **note_tags**: Relación muchos a muchos entre notas y tags
+- **note_urls**: URLs asociadas a las notas
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Desarrollo
 
-## Deploy on Vercel
+### Scripts disponibles
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run dev          # Servidor de desarrollo
+npm run build        # Build de producción
+npm run start        # Servidor de producción
+npm run lint         # Linter
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Roadmap
+
+- [ ] Implementación básica de CRUD
+- [ ] Sistema de autenticación
+- [ ] Interfaz de usuario
+- [ ] Búsqueda y filtros
+- [ ] Exportación de notas
+- [ ] Modo oscuro
+- [ ] PWA (Progressive Web App)
