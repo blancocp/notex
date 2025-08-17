@@ -13,7 +13,7 @@ import Link from 'next/link'
 
 export default function CategoriesPage() {
   const { user } = useAuth()
-  const { categories, createCategory, updateCategory, deleteCategory, isLoading } = useCategories()
+  const { categories, createCategory, updateCategory, deleteCategory, loading } = useCategories()
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -177,7 +177,7 @@ export default function CategoriesPage() {
             categories={categories}
             onEdit={handleEditCategory}
             onDelete={handleDeleteCategory}
-            isLoading={isLoading}
+            isLoading={loading}
           />
         </div>
 
