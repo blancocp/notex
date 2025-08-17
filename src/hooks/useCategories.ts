@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { dbOperation, getCurrentUserId } from '@/lib/supabase'
 import type { Category, CreateCategoryData, UpdateCategoryData } from '@/types/database'
 
 export function useCategories() {
@@ -12,10 +12,7 @@ export function useCategories() {
       setLoading(true)
       setError(null)
 
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name')
+      const { data, error } = await dbOperation.select('categories', '*')
 
       if (error) throw error
 
@@ -31,19 +28,11 @@ export function useCategories() {
     try {
       setError(null)
       
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Usuario no autenticado')
-
-      const { data, error } = await supabase
-        .from('categories')
-        .insert({
-          name: categoryData.name,
-          description: categoryData.description,
-          color: categoryData.color,
-          user_id: user.id
-        })
-        .select()
-        .single()
+      const { data, error } = await dbOperation.insert('categories', {
+        name: categoryData.name,
+        description: categoryData.description,
+        color: categoryData.color
+      })
 
       if (error) throw error
 
@@ -60,18 +49,11 @@ export function useCategories() {
     try {
       setError(null)
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Usuario no autenticado')
-
-      const { error } = await supabase
-        .from('categories')
-        .update({
-          name: categoryData.name,
-          description: categoryData.description,
-          color: categoryData.color
-        })
-        .eq('id', id)
-        .eq('user_id', user.id)
+      const { error } = await dbOperation.update('categories', {
+        name: categoryData.name,
+        description: categoryData.description,
+        color: categoryData.color
+      }, id)
 
       if (error) throw error
 
@@ -87,14 +69,7 @@ export function useCategories() {
     try {
       setError(null)
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Usuario no autenticado')
-
-      const { error } = await supabase
-        .from('categories')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id)
+      const { error } = await dbOperation.delete('categories', id)
 
       if (error) throw error
 

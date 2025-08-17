@@ -1,0 +1,113 @@
+name: Deploy to Orange Pi
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run linting
+      run: npm run lint
+      continue-on-error: true
+    
+    - name: Build application
+      run: npm run build
+    
+    - name: Run tests (if available)
+      run: |
+        if npm run | grep -q "test"; then
+          npm test
+        else
+          echo "No tests defined, skipping..."
+        fi
+      continue-on-error: true
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build application
+      run: npm run build
+    
+    - name: Deploy to Orange Pi
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.PORT }}
+        script: |
+          echo "🚀 Starting deployment..."
+          
+          # Create project directory if it doesn't exist
+          mkdir -p /home/dietpi/apps/notex
+          cd /home/dietpi/apps/notex
+          
+          # Clone or pull latest code
+          if [ ! -d ".git" ]; then
+            echo "📦 Cloning repository..."
+            git clone https://github.com/blancocp/notex.git .
+          else
+            echo "📥 Pulling latest changes..."
+            git fetch origin main
+            git reset --hard origin/main
+          fi
+          
+          # Install dependencies
+          echo "📋 Installing dependencies..."
+          npm ci --production
+          
+          # Build application
+          echo "🏗️ Building application..."
+          npm run build
+          
+          # Stop existing PM2 process if running
+          echo "🛑 Stopping existing process..."
+          pm2 stop notex || true
+          pm2 delete notex || true
+          
+          # Start application with PM2
+          echo "▶️ Starting application..."
+          pm2 start npm --name "notex" -- start
+          pm2 save
+          
+          # Show status
+          echo "✅ Deployment completed!"
+          pm2 status notex
+    
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Deployment to Orange Pi successful!"
+        else
+          echo "❌ Deployment to Orange Pi failed!"
+        fi
