@@ -45,18 +45,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Build application
-      run: npm run build
-    
     - name: Deploy to Orange Pi
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -71,6 +59,12 @@ jobs:
           mkdir -p /home/dietpi/apps/notex
           cd /home/dietpi/apps/notex
           
+          # Backup current .env if it exists
+          if [ -f ".env" ]; then
+            echo "💾 Backing up .env file..."
+            cp .env .env.backup
+          fi
+          
           # Clone or pull latest code
           if [ ! -d ".git" ]; then
             echo "📦 Cloning repository..."
@@ -81,27 +75,57 @@ jobs:
             git reset --hard origin/main
           fi
           
-          # Install dependencies
-          echo "📋 Installing dependencies..."
-          npm ci --production
+          # Restore .env file if backup exists
+          if [ -f ".env.backup" ]; then
+            echo "🔄 Restoring .env file..."
+            cp .env.backup .env
+            rm .env.backup
+          else
+            # Create default .env if none exists
+            echo "📝 Creating default .env file..."
+            cat > .env << 'ENVEOF'
+          # Supabase Configuration
+          NEXT_PUBLIC_SUPABASE_URL=https://bwcbtafocttjdwvhuryb.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y2J0YWZvY3R0amR3dmh1cnliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM3MDk3OTksImV4cCI6MjA2OTI4NTc5OX0.aC7gxMXQTO1-lSUvUR_s2cjxm8mc7zGY8zVY7znYYJk
+          SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y2J0YWZvY3R0amR3dmh1cnliIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzcwOTc5OSwiZXhwIjoyMDY5Mjg1Nzk5fQ.8LzlsOibUWf42suV4G5ihmjusStcLdKPQ7JfF5mRmbg
+
+          # Node Environment
+          NODE_ENV=production
+
+          # App Configuration
+          PORT=3000
+
+          # Disable authentication
+          DISABLE_AUTH=true
+          ENVEOF
+          fi
           
-          # Build application
-          echo "🏗️ Building application..."
-          npm run build
+          # Stop existing containers
+          echo "🛑 Stopping existing containers..."
+          docker compose down || true
           
-          # Stop existing PM2 process if running
-          echo "🛑 Stopping existing process..."
-          pm2 stop notex || true
-          pm2 delete notex || true
+          # Build and start with Docker Compose
+          echo "🏗️ Building and starting containers..."
+          docker compose up --build -d
           
-          # Start application with PM2
-          echo "▶️ Starting application..."
-          pm2 start npm --name "notex" -- start
-          pm2 save
+          # Wait for containers to be ready
+          echo "⏳ Waiting for containers to be ready..."
+          sleep 10
           
-          # Show status
+          # Check container status
+          echo "📊 Container status:"
+          docker compose ps
+          
+          # Test if application is responding
+          echo "🔍 Testing application..."
+          if curl -f http://localhost:3001/dashboard > /dev/null 2>&1; then
+            echo "✅ Application is responding correctly!"
+          else
+            echo "⚠️ Application might not be ready yet, checking logs..."
+            docker compose logs notex-app --tail=20
+          fi
+          
           echo "✅ Deployment completed!"
-          pm2 status notex
     
     - name: Notify deployment status
       if: always()
