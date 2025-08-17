@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  notex-app:
+    build: .
+    container_name: notex-app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+    networks:
+      - notex-network
+
+  notex-nginx:
+    image: nginx:alpine
+    container_name: notex-nginx
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - notex-app
+    networks:
+      - notex-network
+
+networks:
+  notex-network:
+    driver: bridge
