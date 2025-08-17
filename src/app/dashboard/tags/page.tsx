@@ -13,7 +13,7 @@ import Link from 'next/link'
 
 export default function TagsPage() {
   const { user } = useAuth()
-  const { tags, createTag, updateTag, deleteTag, isLoading } = useTags()
+  const { tags, createTag, updateTag, deleteTag, loading } = useTags()
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -53,8 +53,8 @@ export default function TagsPage() {
     }
   }
 
-  const handleDeleteTag = (tag: Tag) => {
-    setSelectedTag(tag)
+  const handleDeleteTag = (tagId: string) => {
+    setSelectedTag(tags.find(t => t.id === tagId) || null)
     setIsDeleteModalOpen(true)
   }
 
@@ -177,7 +177,7 @@ export default function TagsPage() {
             tags={tags}
             onEdit={handleEditTag}
             onDelete={handleDeleteTag}
-            isLoading={isLoading}
+            isLoading={loading}
           />
         </div>
 

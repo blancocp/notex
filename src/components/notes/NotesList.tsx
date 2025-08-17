@@ -33,12 +33,12 @@ export function NotesList({
   const [sortBy, setSortBy] = useState<'created_at' | 'updated_at' | 'title'>('created_at')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
-  const { categories, fetchCategories } = useCategories()
-  const { tags, fetchTags } = useTags()
+  const { categories, refetch: fetchCategories } = useCategories()
+  const { tags, refetch: fetchTags } = useTags()
 
   useEffect(() => {
-    fetchCategories()
-    fetchTags()
+    refetch: fetchCategories()
+    refetch: fetchTags()
   }, [])
 
   useEffect(() => {
@@ -46,9 +46,7 @@ export function NotesList({
       const filter: NotesFilter = {
         search: searchTerm || undefined,
         category_id: selectedCategory || undefined,
-        tag: selectedTag || undefined,
-        sort_by: sortBy,
-        sort_order: sortOrder
+        tags: selectedTag ? [selectedTag] : undefined,
       }
       onFilterChange(filter)
     }

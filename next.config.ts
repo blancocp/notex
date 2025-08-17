@@ -41,7 +41,7 @@ const nextConfig: NextConfig = {
   
   // Configuración experimental para mejor rendimiento
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false,
   },
 };
 

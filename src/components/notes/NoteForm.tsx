@@ -25,12 +25,12 @@ export function NoteForm({ note, onSubmit, onCancel, isLoading = false }: NoteFo
   const [urls, setUrls] = useState<string[]>(note?.urls || [])
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const { categories, fetchCategories } = useCategories()
+  const { categories, refetch: fetchCategories } = useCategories()
   const { tags, searchTags } = useTags()
   const [tagSuggestions, setTagSuggestions] = useState<Tag[]>([])
 
   useEffect(() => {
-    fetchCategories()
+    refetch: fetchCategories()
   }, [])
 
   useEffect(() => {
@@ -96,9 +96,9 @@ export function NoteForm({ note, onSubmit, onCancel, isLoading = false }: NoteFo
     const formData = {
       title: title.trim(),
       content: content.trim(),
-      category_id: categoryId || null,
+      category_id: categoryId || undefined,
       tags: selectedTags,
-      urls
+      urls: urls.map(url => ({ url }))
     }
 
     try {

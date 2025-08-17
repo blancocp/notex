@@ -18,7 +18,7 @@ interface NoteCardProps {
 export function NoteCard({ note, onEdit, onDelete, onView }: NoteCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const maxContentLength = 150
-  const shouldTruncate = note.content.length > maxContentLength
+  const shouldTruncate = (note.content?.length || 0) > maxContentLength
 
   const handleToggleExpand = () => {
     setIsExpanded(!isExpanded)
@@ -77,7 +77,7 @@ export function NoteCard({ note, onEdit, onDelete, onView }: NoteCardProps) {
         <div className="text-gray-700 mb-4">
           {shouldTruncate && !isExpanded ? (
             <>
-              {truncateText(note.content, maxContentLength)}
+              {truncateText((note.content || ""), maxContentLength)}
               <button
                 onClick={handleToggleExpand}
                 className="text-blue-500 hover:text-blue-700 ml-1 font-medium"
@@ -121,12 +121,12 @@ export function NoteCard({ note, onEdit, onDelete, onView }: NoteCardProps) {
             {note.urls.map((url, index) => (
               <a
                 key={index}
-                href={url}
+                href={typeof url === "string" ? url : url.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block text-sm text-blue-500 hover:text-blue-700 hover:underline truncate"
               >
-                {url}
+                {typeof url === "string" ? url : (url.title || url.url)}
               </a>
             ))}
           </div>

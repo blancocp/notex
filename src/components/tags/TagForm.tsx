@@ -40,7 +40,7 @@ export function TagForm({ tag, onSubmit, onCancel, isLoading = false }: TagFormP
 
     const formData: CreateTagData = {
       name: name.trim().toLowerCase(),
-      description: description.trim() || null,
+      description: description.trim() || undefined,
       color
     }
 

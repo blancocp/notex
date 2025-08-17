@@ -7,7 +7,7 @@ import { useNotes } from '@/hooks/useNotes'
 import { Layout } from '@/components/layout/Layout'
 import { NoteForm } from '@/components/notes/NoteForm'
 import { Button } from '@/components/ui/Button'
-import { CreateNoteData } from '@/types/database'
+import { CreateNoteData, UpdateNoteData } from '@/types/database'
 import Link from 'next/link'
 
 export default function NewNotePage() {
@@ -16,10 +16,10 @@ export default function NewNotePage() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleCreateNote = async (data: CreateNoteData) => {
+  const handleCreateNote = async (data: CreateNoteData | UpdateNoteData) => {
     setIsSubmitting(true)
     try {
-      await createNote(data)
+      await createNote(data as CreateNoteData)
       router.push('/dashboard/notes')
     } catch (error) {
       console.error('Error al crear la nota:', error)

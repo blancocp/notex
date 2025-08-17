@@ -232,12 +232,12 @@ export default function NoteDetailPage() {
                     {note.urls.map((url, index) => (
                       <a
                         key={index}
-                        href={url}
+                        href={url.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block text-blue-500 hover:text-blue-700 hover:underline break-all"
                       >
-                        {url}
+                        {url.title || url.url}
                       </a>
                     ))}
                   </div>

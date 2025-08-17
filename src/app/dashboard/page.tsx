@@ -14,18 +14,18 @@ import { Note, Category, Tag } from '@/types/database'
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  const { notes, fetchNotes, isLoading: notesLoading } = useNotes()
-  const { categories, fetchCategories, isLoading: categoriesLoading } = useCategories()
-  const { tags, fetchTags, isLoading: tagsLoading } = useTags()
+  const { notes, refetch, loading: notesLoading } = useNotes()
+  const { categories, refetch: refetchCategories, loading: categoriesLoading } = useCategories()
+  const { tags, refetch: refetchTags, loading: tagsLoading } = useTags()
   const [recentNotes, setRecentNotes] = useState<(Note & { category?: Category; tags?: Tag[] })[]>([])
 
   useEffect(() => {
     if (user) {
-      fetchNotes({ sort_by: 'updated_at', sort_order: 'desc' })
-      fetchCategories()
-      fetchTags()
+      refetch()
+      refetchCategories()
+      refetchTags()
     }
-  }, [user, fetchNotes, fetchCategories, fetchTags])
+  }, [user, refetch, refetch, refetch])
 
   useEffect(() => {
     // Obtener las 6 notas más recientes
@@ -205,7 +205,7 @@ export default function DashboardPage() {
               {recentNotes.map((note) => (
                 <NoteCard
                   key={note.id}
-                  note={note}
+                  note={note as any}
                   onView={() => window.location.href = `/dashboard/notes/${note.id}`}
                 />
               ))}

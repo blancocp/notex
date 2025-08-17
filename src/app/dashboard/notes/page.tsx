@@ -15,11 +15,11 @@ export default function NotesPage() {
   const { user } = useAuth()
   const { 
     notes, 
-    fetchNotes, 
+    refetch, 
     createNote, 
     updateNote, 
     deleteNote, 
-    isLoading 
+    loading 
   } = useNotes()
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -31,20 +31,20 @@ export default function NotesPage() {
 
   useEffect(() => {
     if (user) {
-      fetchNotes()
+      refetch()
     }
-  }, [user, fetchNotes])
+  }, [user, refetch])
 
   const handleFilterChange = (filter: NotesFilter) => {
-    fetchNotes(filter)
+    refetch()
   }
 
-  const handleCreateNote = async (data: CreateNoteData) => {
+  const handleCreateNote = async (data: CreateNoteData | UpdateNoteData) => {
     setIsSubmitting(true)
     try {
-      await createNote(data)
+      await createNote(data as CreateNoteData)
       setIsCreateModalOpen(false)
-      fetchNotes() // Refrescar la lista
+      refetch() // Refrescar la lista
     } catch (error) {
       console.error('Error al crear la nota:', error)
     } finally {
@@ -65,7 +65,7 @@ export default function NotesPage() {
       await updateNote(selectedNote.id, data)
       setIsEditModalOpen(false)
       setSelectedNote(null)
-      fetchNotes() // Refrescar la lista
+      refetch() // Refrescar la lista
     } catch (error) {
       console.error('Error al actualizar la nota:', error)
     } finally {
@@ -86,7 +86,7 @@ export default function NotesPage() {
       await deleteNote(noteToDelete)
       setIsDeleteModalOpen(false)
       setNoteToDelete(null)
-      fetchNotes() // Refrescar la lista
+      refetch() // Refrescar la lista
     } catch (error) {
       console.error('Error al eliminar la nota:', error)
     } finally {
@@ -135,12 +135,12 @@ export default function NotesPage() {
 
         {/* Lista de notas */}
         <NotesList
-          notes={notes}
+          notes={notes as any}
           onEdit={handleEditNote}
           onDelete={handleDeleteNote}
           onView={handleViewNote}
           onFilterChange={handleFilterChange}
-          isLoading={isLoading}
+          isLoading={loading}
         />
 
         {/* Modal para crear nota */}
@@ -169,7 +169,7 @@ export default function NotesPage() {
         >
           {selectedNote && (
             <NoteForm
-              note={selectedNote}
+              note={selectedNote as any}
               onSubmit={handleUpdateNote}
               onCancel={() => {
                 setIsEditModalOpen(false)

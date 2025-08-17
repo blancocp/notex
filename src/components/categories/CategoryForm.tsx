@@ -38,7 +38,7 @@ export function CategoryForm({ category, onSubmit, onCancel, isLoading = false }
 
     const formData: CreateCategoryData = {
       name: name.trim(),
-      description: description.trim() || null,
+      description: description.trim() || undefined,
       color
     }
 
