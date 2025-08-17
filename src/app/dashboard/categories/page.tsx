@@ -58,6 +58,13 @@ export default function CategoriesPage() {
     setIsDeleteModalOpen(true)
   }
 
+  const handleDeleteCategoryById = (categoryId: string) => {
+    const category = categories.find(c => c.id === categoryId)
+    if (category) {
+      handleDeleteCategory(category)
+    }
+  }
+
   const confirmDeleteCategory = async () => {
     if (!selectedCategory) return
     
@@ -176,7 +183,7 @@ export default function CategoriesPage() {
           <CategoriesList
             categories={categories}
             onEdit={handleEditCategory}
-            onDelete={handleDeleteCategory}
+            onDelete={handleDeleteCategoryById}
             isLoading={loading}
           />
         </div>
