@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Tag, CreateTagData, UpdateTagData } from '@/types/database'
 
+const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000000'
+
 export function useTags() {
   const [tags, setTags] = useState<Tag[]>([])
   const [loading, setLoading] = useState(true)
@@ -15,6 +17,7 @@ export function useTags() {
       const { data, error } = await supabase
         .from('tags')
         .select('*')
+        .eq('user_id', DEFAULT_USER_ID)
         .order('name')
 
       if (error) throw error
@@ -30,16 +33,13 @@ export function useTags() {
   const createTag = async (tagData: CreateTagData) => {
     try {
       setError(null)
-      
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Usuario no autenticado')
 
       // Verificar si el tag ya existe
       const { data: existingTag } = await supabase
         .from('tags')
         .select('id')
         .eq('name', tagData.name)
-        .eq('user_id', user.id)
+        .eq('user_id', DEFAULT_USER_ID)
         .single()
 
       if (existingTag) {
@@ -50,9 +50,7 @@ export function useTags() {
         .from('tags')
         .insert({
           name: tagData.name,
-          description: tagData.description,
-          color: tagData.color,
-          user_id: user.id
+          user_id: DEFAULT_USER_ID
         })
         .select()
         .single()
@@ -72,15 +70,12 @@ export function useTags() {
     try {
       setError(null)
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Usuario no autenticado')
-
       // Verificar si el nuevo nombre ya existe (excluyendo el tag actual)
       const { data: existingTag } = await supabase
         .from('tags')
         .select('id')
         .eq('name', tagData.name)
-        .eq('user_id', user.id)
+        .eq('user_id', DEFAULT_USER_ID)
         .neq('id', id)
         .single()
 
@@ -91,12 +86,10 @@ export function useTags() {
       const { error } = await supabase
         .from('tags')
         .update({
-          name: tagData.name,
-          description: tagData.description,
-          color: tagData.color
+          name: tagData.name
         })
         .eq('id', id)
-        .eq('user_id', user.id)
+        .eq('user_id', DEFAULT_USER_ID)
 
       if (error) throw error
 
@@ -112,14 +105,11 @@ export function useTags() {
     try {
       setError(null)
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Usuario no autenticado')
-
       const { error } = await supabase
         .from('tags')
         .delete()
         .eq('id', id)
-        .eq('user_id', user.id)
+        .eq('user_id', DEFAULT_USER_ID)
 
       if (error) throw error
 
@@ -136,6 +126,7 @@ export function useTags() {
       const { data, error } = await supabase
         .from('tags')
         .select('*')
+        .eq('user_id', DEFAULT_USER_ID)
         .ilike('name', `%${query}%`)
         .order('name')
         .limit(10)

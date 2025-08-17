@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Note, CreateNoteData, UpdateNoteData, NotesFilter } from '@/types/database'
 
+const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000000'
+
 export function useNotes(filter?: NotesFilter) {
   const [notes, setNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(true)
@@ -20,6 +22,7 @@ export function useNotes(filter?: NotesFilter) {
           note_tags(tag:tags(*)),
           note_urls(*)
         `)
+        .eq('user_id', DEFAULT_USER_ID)
         .order('created_at', { ascending: false })
 
       if (filter?.category_id) {
@@ -42,12 +45,12 @@ export function useNotes(filter?: NotesFilter) {
 
       if (error) throw error
 
-      // Transformar los datos para incluir tags como array
-      const transformedNotes = data?.map(note => ({
+      // Transform tags array for easier consumption
+      const transformedNotes = (data || []).map(note => ({
         ...note,
         tags: note.note_tags?.map((nt: any) => nt.tag) || [],
         urls: note.note_urls || []
-      })) || []
+      }))
 
       setNotes(transformedNotes)
     } catch (err) {
@@ -60,74 +63,53 @@ export function useNotes(filter?: NotesFilter) {
   const createNote = async (noteData: CreateNoteData) => {
     try {
       setError(null)
-      
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Usuario no autenticado')
 
-      // Crear la nota
-      const { data: note, error: noteError } = await supabase
+      const { data, error } = await supabase
         .from('notes')
         .insert({
           title: noteData.title,
           description: noteData.description,
           content: noteData.content,
           category_id: noteData.category_id,
-          user_id: user.id
+          user_id: DEFAULT_USER_ID
         })
         .select()
         .single()
 
-      if (noteError) throw noteError
+      if (error) throw error
 
-      // Agregar tags si existen
+      // Handle tags if provided
       if (noteData.tags && noteData.tags.length > 0) {
-        const tagPromises = noteData.tags.map(async (tagName) => {
-          // Buscar o crear el tag
-          let { data: tag } = await supabase
-            .from('tags')
-            .select('id')
-            .eq('name', tagName)
-            .eq('user_id', user.id)
-            .single()
+        const tagInserts = noteData.tags.map(tagId => ({
+          note_id: data.id,
+          tag_id: tagId
+        }))
 
-          if (!tag) {
-            const { data: newTag, error: tagError } = await supabase
-              .from('tags')
-              .insert({ name: tagName, user_id: user.id })
-              .select('id')
-              .single()
-            
-            if (tagError) throw tagError
-            tag = newTag
-          }
+        const { error: tagError } = await supabase
+          .from('note_tags')
+          .insert(tagInserts)
 
-          // Crear la relación nota-tag
-          return supabase
-            .from('note_tags')
-            .insert({ note_id: note.id, tag_id: tag.id })
-        })
-
-        await Promise.all(tagPromises)
+        if (tagError) throw tagError
       }
 
-      // Agregar URLs si existen
+      // Handle URLs if provided  
       if (noteData.urls && noteData.urls.length > 0) {
-        const urlPromises = noteData.urls.map(url => 
-          supabase
-            .from('note_urls')
-            .insert({
-              note_id: note.id,
-              url: url.url,
-              title: url.title,
-              description: url.description
-            })
-        )
+        const urlInserts = noteData.urls.map(url => ({
+          note_id: data.id,
+          url: url.url,
+          title: url.title,
+          description: url.description
+        }))
 
-        await Promise.all(urlPromises)
+        const { error: urlError } = await supabase
+          .from('note_urls')
+          .insert(urlInserts)
+
+        if (urlError) throw urlError
       }
 
       await fetchNotes()
-      return note
+      return data
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al crear la nota'
       setError(errorMessage)
@@ -139,11 +121,7 @@ export function useNotes(filter?: NotesFilter) {
     try {
       setError(null)
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Usuario no autenticado')
-
-      // Actualizar la nota
-      const { error: noteError } = await supabase
+      const { error } = await supabase
         .from('notes')
         .update({
           title: noteData.title,
@@ -152,72 +130,9 @@ export function useNotes(filter?: NotesFilter) {
           category_id: noteData.category_id
         })
         .eq('id', id)
-        .eq('user_id', user.id)
+        .eq('user_id', DEFAULT_USER_ID)
 
-      if (noteError) throw noteError
-
-      // Actualizar tags si se proporcionan
-      if (noteData.tags !== undefined) {
-        // Eliminar tags existentes
-        await supabase
-          .from('note_tags')
-          .delete()
-          .eq('note_id', id)
-
-        // Agregar nuevos tags
-        if (noteData.tags.length > 0) {
-          const tagPromises = noteData.tags.map(async (tagName) => {
-            let { data: tag } = await supabase
-              .from('tags')
-              .select('id')
-              .eq('name', tagName)
-              .eq('user_id', user.id)
-              .single()
-
-            if (!tag) {
-              const { data: newTag, error: tagError } = await supabase
-                .from('tags')
-                .insert({ name: tagName, user_id: user.id })
-                .select('id')
-                .single()
-              
-              if (tagError) throw tagError
-              tag = newTag
-            }
-
-            return supabase
-              .from('note_tags')
-              .insert({ note_id: id, tag_id: tag.id })
-          })
-
-          await Promise.all(tagPromises)
-        }
-      }
-
-      // Actualizar URLs si se proporcionan
-      if (noteData.urls !== undefined) {
-        // Eliminar URLs existentes
-        await supabase
-          .from('note_urls')
-          .delete()
-          .eq('note_id', id)
-
-        // Agregar nuevas URLs
-        if (noteData.urls.length > 0) {
-          const urlPromises = noteData.urls.map(url => 
-            supabase
-              .from('note_urls')
-              .insert({
-                note_id: id,
-                url: url.url,
-                title: url.title,
-                description: url.description
-              })
-          )
-
-          await Promise.all(urlPromises)
-        }
-      }
+      if (error) throw error
 
       await fetchNotes()
     } catch (err) {
@@ -231,14 +146,11 @@ export function useNotes(filter?: NotesFilter) {
     try {
       setError(null)
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Usuario no autenticado')
-
       const { error } = await supabase
         .from('notes')
         .delete()
         .eq('id', id)
-        .eq('user_id', user.id)
+        .eq('user_id', DEFAULT_USER_ID)
 
       if (error) throw error
 
