@@ -43,7 +43,7 @@ export default function NoteDetailPage() {
           id: id as string,
           title: 'Nota de ejemplo',
           content: 'Este es el contenido de la nota...',
-          category_id: null,
+          category_id: undefined,
           user_id: user?.id || '',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
