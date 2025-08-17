@@ -36,58 +36,6 @@ export const getCurrentUserId = async () => {
   return user?.id || null
 }
 
-// Wrapper para operaciones de base de datos que inyecta user_id automáticamente
-export const dbOperation = {
-  // Para insertar registros con user_id automático
-  async insert(table: string, data: any) {
-    const client = getSupabaseClient()
-    const userId = await getCurrentUserId()
-    
-    if (!userId) {
-      throw new Error('No user ID available')
-    }
-    
-    const dataWithUserId = { ...data, user_id: userId }
-    return client.from(table).insert(dataWithUserId)
-  },
-
-  // Para consultas filtradas por user_id automáticamente
-  async select(table: string, query: string = '*') {
-    const client = getSupabaseClient()
-    const userId = await getCurrentUserId()
-    
-    if (!userId) {
-      throw new Error('No user ID available')
-    }
-    
-    return client.from(table).select(query).eq('user_id', userId)
-  },
-
-  // Para updates filtrados por user_id
-  async update(table: string, data: any, id: string) {
-    const client = getSupabaseClient()
-    const userId = await getCurrentUserId()
-    
-    if (!userId) {
-      throw new Error('No user ID available')
-    }
-    
-    return client.from(table).update(data).eq('id', id).eq('user_id', userId)
-  },
-
-  // Para deletes filtrados por user_id
-  async delete(table: string, id: string) {
-    const client = getSupabaseClient()
-    const userId = await getCurrentUserId()
-    
-    if (!userId) {
-      throw new Error('No user ID available')
-    }
-    
-    return client.from(table).delete().eq('id', id).eq('user_id', userId)
-  }
-}
-
 export type Database = {
   public: {
     Tables: {

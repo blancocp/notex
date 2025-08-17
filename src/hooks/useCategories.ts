@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { dbOperation, getCurrentUserId } from '@/lib/supabase'
+import { supabase, getSupabaseClient, getCurrentUserId } from '@/lib/supabase'
 import type { Category, CreateCategoryData, UpdateCategoryData } from '@/types/database'
 
 export function useCategories() {
@@ -12,7 +12,18 @@ export function useCategories() {
       setLoading(true)
       setError(null)
 
-      const { data, error } = await dbOperation.select('categories', '*')
+      const client = getSupabaseClient()
+      const userId = await getCurrentUserId()
+      
+      if (!userId) {
+        throw new Error('No user ID available')
+      }
+
+      const { data, error } = await client
+        .from('categories')
+        .select('*')
+        .eq('user_id', userId)
+        .order('name')
 
       if (error) throw error
 
@@ -28,11 +39,23 @@ export function useCategories() {
     try {
       setError(null)
       
-      const { data, error } = await dbOperation.insert('categories', {
-        name: categoryData.name,
-        description: categoryData.description,
-        color: categoryData.color
-      })
+      const client = getSupabaseClient()
+      const userId = await getCurrentUserId()
+      
+      if (!userId) {
+        throw new Error('No user ID available')
+      }
+
+      const { data, error } = await client
+        .from('categories')
+        .insert({
+          name: categoryData.name,
+          description: categoryData.description,
+          color: categoryData.color,
+          user_id: userId
+        })
+        .select()
+        .single()
 
       if (error) throw error
 
@@ -49,11 +72,22 @@ export function useCategories() {
     try {
       setError(null)
 
-      const { error } = await dbOperation.update('categories', {
-        name: categoryData.name,
-        description: categoryData.description,
-        color: categoryData.color
-      }, id)
+      const client = getSupabaseClient()
+      const userId = await getCurrentUserId()
+      
+      if (!userId) {
+        throw new Error('No user ID available')
+      }
+
+      const { error } = await client
+        .from('categories')
+        .update({
+          name: categoryData.name,
+          description: categoryData.description,
+          color: categoryData.color
+        })
+        .eq('id', id)
+        .eq('user_id', userId)
 
       if (error) throw error
 
@@ -69,7 +103,18 @@ export function useCategories() {
     try {
       setError(null)
 
-      const { error } = await dbOperation.delete('categories', id)
+      const client = getSupabaseClient()
+      const userId = await getCurrentUserId()
+      
+      if (!userId) {
+        throw new Error('No user ID available')
+      }
+
+      const { error } = await client
+        .from('categories')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId)
 
       if (error) throw error
 
