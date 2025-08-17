@@ -2,39 +2,8 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-// Cliente normal para auth habilitado
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-// Cliente administrativo para cuando auth está deshabilitado
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-})
-
-// ID de usuario por defecto cuando no hay autenticación
-const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000000'
-
-// Cliente que se usa según el modo de autenticación
-export const getSupabaseClient = () => {
-  if (process.env.DISABLE_AUTH === 'true') {
-    return supabaseAdmin
-  }
-  return supabase
-}
-
-// Helper para obtener el user_id correcto
-export const getCurrentUserId = async () => {
-  if (process.env.DISABLE_AUTH === 'true') {
-    return DEFAULT_USER_ID
-  }
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  return user?.id || null
-}
 
 export type Database = {
   public: {

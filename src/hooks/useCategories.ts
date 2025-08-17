@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import { supabase, getSupabaseClient, getCurrentUserId } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import type { Category, CreateCategoryData, UpdateCategoryData } from '@/types/database'
+
+const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000000'
 
 export function useCategories() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -12,17 +14,10 @@ export function useCategories() {
       setLoading(true)
       setError(null)
 
-      const client = getSupabaseClient()
-      const userId = await getCurrentUserId()
-      
-      if (!userId) {
-        throw new Error('No user ID available')
-      }
-
-      const { data, error } = await client
+      const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', DEFAULT_USER_ID)
         .order('name')
 
       if (error) throw error
@@ -38,21 +33,13 @@ export function useCategories() {
   const createCategory = async (categoryData: CreateCategoryData) => {
     try {
       setError(null)
-      
-      const client = getSupabaseClient()
-      const userId = await getCurrentUserId()
-      
-      if (!userId) {
-        throw new Error('No user ID available')
-      }
 
-      const { data, error } = await client
+      const { data, error } = await supabase
         .from('categories')
         .insert({
           name: categoryData.name,
           description: categoryData.description,
-          color: categoryData.color,
-          user_id: userId
+          user_id: DEFAULT_USER_ID
         })
         .select()
         .single()
@@ -72,22 +59,14 @@ export function useCategories() {
     try {
       setError(null)
 
-      const client = getSupabaseClient()
-      const userId = await getCurrentUserId()
-      
-      if (!userId) {
-        throw new Error('No user ID available')
-      }
-
-      const { error } = await client
+      const { error } = await supabase
         .from('categories')
         .update({
           name: categoryData.name,
-          description: categoryData.description,
-          color: categoryData.color
+          description: categoryData.description
         })
         .eq('id', id)
-        .eq('user_id', userId)
+        .eq('user_id', DEFAULT_USER_ID)
 
       if (error) throw error
 
@@ -103,18 +82,11 @@ export function useCategories() {
     try {
       setError(null)
 
-      const client = getSupabaseClient()
-      const userId = await getCurrentUserId()
-      
-      if (!userId) {
-        throw new Error('No user ID available')
-      }
-
-      const { error } = await client
+      const { error } = await supabase
         .from('categories')
         .delete()
         .eq('id', id)
-        .eq('user_id', userId)
+        .eq('user_id', DEFAULT_USER_ID)
 
       if (error) throw error
 
