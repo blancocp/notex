@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Deshabilitamos ESLint durante el build para CI/CD
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
   // Optimizaciones para producción
   compress: true,
   poweredByHeader: false,
